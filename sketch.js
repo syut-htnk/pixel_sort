@@ -56,7 +56,7 @@ function img_sort_pixels(img) {
                 img.pixels[index + 3],
             ]);
         }
-        
+
         // 輝度基準でソート
         // Rec.709 : Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
         rowPixels.sort((a, b) => {

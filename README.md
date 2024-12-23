@@ -263,6 +263,84 @@ function img_create_mask(img) {
 セグメント化とは、前項で2値化したことで**黒黒黒黒白白白黒黒黒黒黒黒白白黒**のようにピクセルが並ぶことになる。
 そこで、連続した色（今回の場合は**白**）に着目する。そしてそれを1つのグループと解釈して、1つのグループ内でソートをすることで新たな表現を模索しようというものである。
 
+```js
+function img_sort_pixels_with_mask(img) {
+    img.loadPixels();
+
+    for (let y = 0; y < img.height; y++) {
+        // まず行のマスクを作成
+        let maskRow = [];
+        let pixelGroups = [];
+        let currentGroup = [];
+        let currentMask = -1;
+
+        // マスクを作成しながらグループを特定
+        for (let x = 0; x < img.width; x++) {
+            let index = (y * img.width + x) * 4;
+            let brightness = get_brightness(
+                img.pixels[index],
+                img.pixels[index + 1],
+                img.pixels[index + 2]
+            );
+            let maskValue = brightness > threshold ? 255 : 0;
+
+            // 新しいグループの開始
+            if (maskValue !== currentMask) {
+                if (currentGroup.length > 0) {
+                    pixelGroups.push({
+                        mask: currentMask,
+                        pixels: currentGroup,
+                        startX: x - currentGroup.length
+                    });
+                }
+                currentGroup = [];
+                currentMask = maskValue;
+            }
+
+            currentGroup.push([
+                img.pixels[index],
+                img.pixels[index + 1],
+                img.pixels[index + 2],
+                img.pixels[index + 3],
+            ]);
+        }
+        // 最後のグループを追加
+        if (currentGroup.length > 0) {
+            pixelGroups.push({
+                mask: currentMask,
+                pixels: currentGroup,
+                startX: img.width - currentGroup.length
+            });
+        }
+
+        // 明るいグループ（mask=255）のみをソート
+        pixelGroups.forEach(group => {
+            if (group.mask === 255) {
+                group.pixels.sort((a, b) => {
+                    let va = get_brightness(a[0], a[1], a[2]);
+                    let vb = get_brightness(b[0], b[1], b[2]);
+                    return vb - va;
+                });
+            }
+        });
+
+        // ソート済みのピクセルを元の画像に書き戻す
+        pixelGroups.forEach(group => {
+            group.pixels.forEach((pixel, i) => {
+                let x = group.startX + i;
+                let index = (y * img.width + x) * 4;
+                img.pixels[index] = pixel[0];
+                img.pixels[index + 1] = pixel[1];
+                img.pixels[index + 2] = pixel[2];
+                img.pixels[index + 3] = pixel[3];
+            });
+        });
+    }
+    img.updatePixels();
+    return img;
+}
+```
+
 
 
 
