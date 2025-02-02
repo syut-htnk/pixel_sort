@@ -1,20 +1,27 @@
 let img, sorted_img;
 let img_mask;
-let threshold = 130;
+// let threshold = 130;
+let threshold = 0;
 let isVisibleMask = false;
 let isVertical = false;
 let isSortHighToLow = false;
 let customFont;
 
 function preload() {
-    img = loadImage('./assets/face.jpg');
+    img = loadImage('./assets/face02.jpg');
+    img.resize(img.width / 2, img.height / 2);
 }
 
 function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
-    pixelDensity(1);
+    pixelDensity(4);
     setAttributes('willReadFrequently', true);
     customFont = loadFont('assets/Arial.ttf');
+
+    const factor = height / img.height;
+    img.resize(Math.floor(img.width * factor), Math.floor(img.height * factor));
+
+    frameRate(10);
 }
 
 function draw() {
@@ -22,6 +29,7 @@ function draw() {
 
     // WEBGL座標系での描画位置調整
     translate(-width / 2, -height / 2);
+    
 
     // 元画像の描画
     image(img, 0, 0);
@@ -47,7 +55,22 @@ function draw() {
     fill(30);
     text('Threshold: ' + threshold, 10, 20);
     pop();
+
+    animateFrame();
 }
+
+
+/*
+    * @img {p5.Image} 画像インスタンス
+    * @returns {p5.Image} 画像インスタンス
+    * 
+    * 画像インスタンスのピクセル値を更新するため、updatePixels()が必要
+    * 例: updatePixels(img);
+    */
+function animateFrame() {
+    threshold = constrain(threshold + 1, 0, 255);
+}
+
 /*
     * @img {p5.Image} 画像インスタンス
     * @x {Number} 画像内のx座標
