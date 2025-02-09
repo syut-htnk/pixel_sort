@@ -7,32 +7,46 @@ let isVertical = false;
 let isSortHighToLow = false;
 let customFont;
 
+let column_gap = 32;
+let row_gap = 32; // 縦方向の余白を追加
+
 function preload() {
     img = loadImage('./assets/face02.jpg');
-    img.resize(img.width / 2, img.height / 2);
+    // img.resize(img.width, img.height);
 }
 
 function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
-    pixelDensity(4);
+    pixelDensity(1);
     setAttributes('willReadFrequently', true);
     customFont = loadFont('assets/Arial.ttf');
 
-    const factor = height / img.height;
-    img.resize(Math.floor(img.width * factor), Math.floor(img.height * factor));
+    // 利用可能な高さから上下の余白を引く
+    const availableHeight = height - row_gap * 2;
+    // 画像の初期リサイズ（必要なら preload() のリサイズを削除してください）
+    // ここでは、キャンバス内に収めるため、画像のスケールファクターを計算する
+    const scaleFactor = Math.min(width / (img.width * 2 + column_gap * 4), availableHeight / img.height);
+    img.resize(Math.floor(img.width * scaleFactor), Math.floor(img.height * scaleFactor));
 
-    frameRate(10);
+    frameRate(60);
 }
 
-function draw() {
-    background(0);
 
-    // WEBGL座標系での描画位置調整
+function draw() {
+    background(255);
+
+    // WEBGL座標系の原点を左上に移動
     translate(-width / 2, -height / 2);
     
-
+    // レイアウト全体での横方向と縦方向のサイズ
+    const totalWidth = img.width * 2 + column_gap;
+    const totalHeight = img.height + row_gap * 2;
+    // 画像を水平・垂直方向に中央揃えするためのオフセット
+    const xOffset = (width - totalWidth) / 2;
+    const yOffset = (height - totalHeight) / 2 + row_gap;
+    
     // 元画像の描画
-    image(img, 0, 0);
+    image(img, xOffset, yOffset);
 
     sorted_img = createImage(img.width, img.height);
     sorted_img.copy(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height);
@@ -41,11 +55,11 @@ function draw() {
 
     sorted_img = sortImagePixels(sorted_img, isVertical);
 
-    // 処理後の画像の描画
+    // 処理後の画像の描画（もしくはマスク画像）
     if (isVisibleMask) {
-        image(createMask(img_mask), img.width, 0);
+        image(createMask(img_mask), xOffset + img.width + column_gap, yOffset);
     } else {
-        image(sorted_img, img.width, 0);
+        image(sorted_img, xOffset + img.width + column_gap, yOffset);
     }
 
     // threshold値の表示位置調整
